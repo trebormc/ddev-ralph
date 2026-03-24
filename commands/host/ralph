@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run Ralph Loop autonomous task runner (supports OpenCode and Claude Code)
+## Usage: ralph [--backend opencode|claude] [options]
+## Example: "ddev ralph --backend opencode", "ddev ralph --backend claude --prompt tasks.md"
+## ExecRaw: true
+
+RALPH_CONTAINER="ddev-${DDEV_SITENAME}-ralph"
+RALPH_SCRIPT="/var/www/html/.ddev/ralph-loop/ralph.sh"
+
+set_tab_title() {
+    printf '\033]0;%s - Ralph Loop\007' "${DDEV_SITENAME}"
+}
+
+restore_tab_title() {
+    printf '\033]0;%s\007' "${TERM_PROGRAM:-Terminal}"
+}
+
+# Check ralph container is running
+if ! docker inspect "$RALPH_CONTAINER" &>/dev/null; then
+    echo "Error: Ralph container is not running."
+    echo "Make sure ddev-ralph is installed: ddev add-on get trebormc/ddev-ralph"
+    echo "Then restart: ddev restart"
+    exit 1
+fi
+
+# Special subcommand: shell
+if [ "$1" = "shell" ] || [ "$1" = "bash" ]; then
+    set_tab_title
+    trap restore_tab_title EXIT
+    docker exec -it "$RALPH_CONTAINER" bash
+    exit $?
+fi
+
+set_tab_title
+trap restore_tab_title EXIT
+docker exec -it -w /var/www/html "$RALPH_CONTAINER" "$RALPH_SCRIPT" "$@"

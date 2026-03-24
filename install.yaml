@@ -1,0 +1,47 @@
+name: ddev-ralph
+
+ddev_version_constraint: '>= v1.23.5'
+
+dependencies:
+  - trebormc/ddev-playwright-mcp
+  - trebormc/ddev-beads
+
+pre_install_actions:
+  - |
+    #ddev-description:Checking prerequisites for Ralph Loop
+    echo "Installing ddev-ralph add-on..."
+
+project_files:
+  - docker-compose.ralph.yaml
+  - ralph-build/Dockerfile.ralph
+  - ralph-loop/ralph.sh
+  - ralph-loop/requirements.md
+  - ralph-loop/requirements-example.md
+  - ralph-loop/audit-fixers/fix-phpunit.md
+  - ralph-loop/audit-fixers/fix-phpcs.md
+  - ralph-loop/audit-fixers/fix-phpstan.md
+  - ralph-loop/audit-fixers/fix-complexity.md
+  - ralph-loop/audit-fixers/fix-twig.md
+  - commands/host/ralph
+
+global_files: []
+
+post_install_actions:
+  - |
+    #ddev-description:Configuring Ralph Loop
+    chmod +x .ddev/ralph-loop/ralph.sh
+    chmod +x .ddev/commands/host/ralph
+    echo ""
+    echo "Ralph Loop installed successfully!"
+    echo ""
+    echo "IMPORTANT: Ralph delegates to AI containers via docker exec."
+    echo "You need at least one of these add-ons installed:"
+    echo "  ddev add-on get trebormc/ddev-opencode      (for --backend opencode)"
+    echo "  ddev add-on get trebormc/ddev-claude-code    (for --backend claude)"
+    echo ""
+    echo "Usage: ddev ralph --backend opencode|claude"
+
+removal_actions:
+  - |
+    #ddev-description:Cleaning up Ralph Loop
+    echo "Ralph Loop add-on removed."

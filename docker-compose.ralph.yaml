@@ -1,0 +1,61 @@
+#ddev-generated
+# Ralph Loop — Autonomous AI task orchestrator for DDEV
+# Delegates to OpenCode or Claude Code containers via docker exec
+# Install: ddev add-on get trebormc/ddev-ralph
+
+services:
+  ralph:
+    container_name: ddev-${DDEV_SITENAME}-ralph
+    hostname: ralph
+    build:
+      context: .
+      dockerfile: ralph-build/Dockerfile.ralph
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    restart: "no"
+    user: "${DDEV_UID:-1000}:${DDEV_GID:-1000}"
+    working_dir: /var/www/html
+
+    depends_on:
+      - web
+      - beads
+
+    volumes:
+      - ../:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ddev-global-cache:/mnt/ddev-global-cache
+
+    environment:
+      - DDEV_SITENAME
+      - DDEV_PRIMARY_URL
+      - DDEV_DOCROOT
+      - IS_DDEV_PROJECT=true
+      - WEB_CONTAINER=ddev-${DDEV_SITENAME}-web
+      - DB_CONTAINER=ddev-${DDEV_SITENAME}-db
+      - OPENCODE_CONTAINER=ddev-${DDEV_SITENAME}-opencode
+      - CLAUDE_CONTAINER=ddev-${DDEV_SITENAME}-claude-code
+      - BEADS_CONTAINER=ddev-${DDEV_SITENAME}-beads
+      - TZ=${TZ:-UTC}
+
+    stdin_open: true
+    tty: true
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    networks:
+      - default
+      - ddev_default
+
+    # Container stays running idle — ralph.sh is invoked on demand
+    command: ["sleep", "infinity"]
+
+networks:
+  ddev_default:
+    name: ddev_default
+    external: true
+
+volumes:
+  ddev-global-cache:
+    external: true
