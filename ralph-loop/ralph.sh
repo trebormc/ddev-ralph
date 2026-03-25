@@ -21,7 +21,7 @@
 # Options:
 #   -b, --backend <tool>     Backend: opencode or claude (default: opencode)
 #   -p, --prompt <file>      Requirements file (default: ./requirements.md)
-#   -m, --model <model>      Model to use (default: anthropic/claude-opus-4-6)
+#   -m, --model <model>      Model to use (default: backend's own default)
 #   -i, --iterations <n>     Max iterations (default: 200)
 #   -d, --delay <seconds>    Delay between iterations (default: 1)
 #   --no-replan              Skip re-planning (resume existing tasks)
@@ -48,8 +48,7 @@ set -euo pipefail
 # =============================================================================
 
 PROMPT_FILE="./requirements.md"
-MODEL="anthropic/claude-opus-4-6"
-#MODEL="litellm/accounts/fireworks/models/kimi-k2p5"
+MODEL=""
 MAX_ITERATIONS=200
 DELAY_SECONDS=1
 REPLAN=true
@@ -99,16 +98,12 @@ USAGE:
 OPTIONS:
   -b, --backend <tool>     Backend: opencode or claude (default: opencode)
   -p, --prompt <file>      Requirements file (default: ./requirements.md)
-  -m, --model <model>      Model to use (default: anthropic/claude-opus-4-6)
+  -m, --model <model>      Model override (default: backend's own default)
   -i, --iterations <n>     Max iterations (default: 200)
   -d, --delay <seconds>    Delay between iterations (default: 1)
   --no-replan              Skip re-planning (resume existing tasks)
   --no-beads               Run without Beads integration (legacy mode)
   -h, --help               Show this help
-
-RECOMMENDED MODELS:
-  anthropic/claude-opus-4-6                      # Default - Premium quality, best reasoning
-  litellm/accounts/fireworks/models/kimi-k2p5    # Alternative - Fast, cost-effective
 
 DELAY RECOMMENDATIONS:
   0s    Maximum speed (overnight runs, no supervision needed)
@@ -116,13 +111,13 @@ DELAY RECOMMENDATIONS:
   3-5s  Debugging/supervision (readable logs, easy to interrupt with Ctrl+C)
 
 EXAMPLES:
-  ./ralph.sh --backend opencode                                          # OpenCode backend (default)
-  ./ralph.sh --backend claude                                            # Claude Code backend
-  ./ralph.sh -b claude --prompt my-project.md                            # Custom requirements with Claude
-  ./ralph.sh --no-replan                                                 # Resume existing tasks
-  ./ralph.sh -b opencode -m litellm/accounts/fireworks/models/kimi-k2p5  # Use fast model
-  ./ralph.sh --no-beads -p simple-task.md                                # Legacy mode (no tracking)
-  ./ralph.sh -b claude -i 500 -d 0                                      # Overnight Claude run
+  ./ralph.sh --backend opencode                              # OpenCode backend (default model)
+  ./ralph.sh --backend claude                                # Claude Code backend (default model)
+  ./ralph.sh -b claude --prompt my-project.md                # Custom requirements with Claude
+  ./ralph.sh --no-replan                                     # Resume existing tasks
+  ./ralph.sh -b claude -m anthropic/claude-sonnet-4-6        # Override model
+  ./ralph.sh --no-beads -p simple-task.md                    # Legacy mode (no tracking)
+  ./ralph.sh -b claude -i 500 -d 0                           # Overnight Claude run
 
 EXIT CODES:
   0 - All tasks completed successfully
@@ -243,6 +238,11 @@ check_beads_available() {
 run_ai_tool() {
   local prompt="$1"
   local output=""
+  local model_flag=""
+
+  if [[ -n "$MODEL" ]]; then
+    model_flag="--model $MODEL"
+  fi
 
   case "$BACKEND" in
     opencode)
@@ -251,14 +251,14 @@ run_ai_tool() {
         -e OPENCODE_PERMISSION='{"*":"allow"}' \
         -w /var/www/html \
         "$OPENCODE_CONTAINER" \
-        opencode run --model "$MODEL" 2>&1) || true
+        opencode run $model_flag 2>&1) || true
       ;;
     claude)
       # Execute in the Claude Code container via docker exec
       output=$(echo "$prompt" | docker exec -i \
         -w /var/www/html \
         "$CLAUDE_CONTAINER" \
-        claude -p --model "$MODEL" --dangerously-skip-permissions 2>&1) || true
+        claude -p $model_flag --dangerously-skip-permissions 2>&1) || true
       ;;
   esac
 
@@ -366,7 +366,7 @@ fi
 echo -e "${CY}${SEP}${R}"
 echo ""
 echo -e "  ${B}Requirements:${R}  $PROMPT_FILE"
-echo -e "  ${B}Model:${R}         $MODEL"
+echo -e "  ${B}Model:${R}         ${MODEL:-${DIM}(backend default)${R}}"
 echo -e "  ${B}Max iter:${R}      $MAX_ITERATIONS"
 echo -e "  ${B}Delay:${R}         ${DELAY_SECONDS}s"
 echo -e "  ${B}Beads:${R}         $(if [[ "$USE_BEADS" == "true" ]]; then echo -e "${GR}enabled${R}"; else echo -e "${Y}disabled${R}"; fi)"
