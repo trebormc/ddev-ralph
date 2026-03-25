@@ -197,14 +197,19 @@ Ralph only contains bash, jq, and docker CLI. All AI execution happens in the de
 | `1` | Error (missing backend, invalid arguments, runtime failure) |
 | `2` | Maximum iterations reached before completion |
 
-## Related
+## Part of DDEV AI Workspace
 
-- [ddev-opencode](https://github.com/trebormc/ddev-opencode) -- OpenCode AI container (backend for Ralph)
-- [ddev-claude-code](https://github.com/trebormc/ddev-claude-code) -- Claude Code container (backend for Ralph)
-- [ddev-agents-sync](https://github.com/trebormc/ddev-agents-sync) -- Agents auto-sync from git
-- [ddev-beads](https://github.com/trebormc/ddev-beads) -- Beads task tracker (auto-installed)
-- [ddev-playwright-mcp](https://github.com/trebormc/ddev-playwright-mcp) -- Browser automation (auto-installed)
-- [drupal-ai-agents](https://github.com/trebormc/drupal-ai-agents) -- Agent definitions for OpenCode
+This add-on is part of [DDEV AI Workspace](https://github.com/trebormc/ddev-ai-workspace), a modular ecosystem of DDEV add-ons for AI-powered Drupal development.
+
+| Repository | Description | Relationship |
+|------------|-------------|--------------|
+| [ddev-ai-workspace](https://github.com/trebormc/ddev-ai-workspace) | Meta add-on that installs the full AI development stack with one command. | Workspace |
+| [ddev-opencode](https://github.com/trebormc/ddev-opencode) | [OpenCode](https://opencode.ai) AI CLI container for interactive development. | Backend (required, pick one or both) |
+| [ddev-claude-code](https://github.com/trebormc/ddev-claude-code) | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI container for interactive development. | Backend (required, pick one or both) |
+| [ddev-playwright-mcp](https://github.com/trebormc/ddev-playwright-mcp) | Headless Playwright browser for browser automation and visual testing. | Auto-installed dependency |
+| [ddev-beads](https://github.com/trebormc/ddev-beads) | [Beads](https://github.com/steveyegge/beads) git-backed task tracker. Ralph uses it for task planning and progress tracking. | Auto-installed dependency |
+| [ddev-agents-sync](https://github.com/trebormc/ddev-agents-sync) | Auto-syncs AI agent repositories into a shared Docker volume. | Not a direct dependency |
+| [drupal-ai-agents](https://github.com/trebormc/drupal-ai-agents) | 13 agents, 4 rules, 14 skills for Drupal development. Includes `ralph-planner` agent. | Agent configuration |
 
 ## Disclaimer
 
