@@ -1,4 +1,5 @@
 #!/bin/bash
+#ddev-generated
 
 # =============================================================================
 # Ralph Loop - Autonomous AI Task Orchestrator with Beads Integration

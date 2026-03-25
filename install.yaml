@@ -29,7 +29,7 @@ global_files: []
 post_install_actions:
   - |
     #ddev-description:Configuring Ralph Loop
-    chmod +x .ddev/ralph-loop/ralph.sh
+    echo "Ralph Loop configured."
     echo ""
     echo "Ralph Loop installed successfully!"
     echo ""
