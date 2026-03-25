@@ -101,7 +101,7 @@ ddev ralph shell
 |--------|---------|-------------|
 | `-b, --backend` | `opencode` | AI backend: `opencode` or `claude` |
 | `-p, --prompt` | `./requirements.md` | Requirements file path |
-| `-m, --model` | `anthropic/claude-opus-4-6` | Model to use |
+| `-m, --model` | *(backend default)* | Model override |
 | `-i, --iterations` | `200` | Maximum iterations |
 | `-d, --delay` | `1` | Seconds between iterations |
 | `--no-replan` | | Resume existing tasks (skip planning) |
@@ -201,6 +201,7 @@ Ralph only contains bash, jq, and docker CLI. All AI execution happens in the de
 
 - [ddev-opencode](https://github.com/trebormc/ddev-opencode) -- OpenCode AI container (backend for Ralph)
 - [ddev-claude-code](https://github.com/trebormc/ddev-claude-code) -- Claude Code container (backend for Ralph)
+- [ddev-agents-sync](https://github.com/trebormc/ddev-agents-sync) -- Agents auto-sync from git
 - [ddev-beads](https://github.com/trebormc/ddev-beads) -- Beads task tracker (auto-installed)
 - [ddev-playwright-mcp](https://github.com/trebormc/ddev-playwright-mcp) -- Browser automation (auto-installed)
 - [drupal-ai-agents](https://github.com/trebormc/drupal-ai-agents) -- Agent definitions for OpenCode
