@@ -41,8 +41,6 @@ RUN existing_user=$(getent passwd ${USER_UID} | cut -d: -f1) \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
-RUN usermod -aG docker ${USERNAME} || true
-
 RUN mkdir -p /var/www/html \
     && chown -R ${USER_UID}:${USER_GID} ${USER_HOME} \
     && chown -R ${USER_UID}:${USER_GID} /var/www/html
@@ -55,5 +53,10 @@ RUN echo 'alias ll="ls -la"' >> ~/.bashrc \
     && echo 'echo "Ralph container ready (orchestrator)"' >> ~/.bashrc \
     && echo 'echo "  AI backends via docker exec: opencode | claude-code"' >> ~/.bashrc \
     && echo 'echo "  Usage: ralph.sh --backend opencode|claude [options]"' >> ~/.bashrc
+
+COPY ralph-build/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sudo chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 WORKDIR /var/www/html

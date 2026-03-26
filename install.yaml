@@ -14,6 +14,7 @@ pre_install_actions:
 project_files:
   - docker-compose.ralph.yaml
   - ralph-build/Dockerfile.ralph
+  - ralph-build/entrypoint.sh
   - ralph-loop/ralph.sh
   - ralph-loop/requirements.md
   - ralph-loop/requirements-example.md
