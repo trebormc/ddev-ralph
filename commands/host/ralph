@@ -29,10 +29,10 @@ fi
 if [ "$1" = "shell" ] || [ "$1" = "bash" ]; then
     set_tab_title
     trap restore_tab_title EXIT
-    docker exec -it "$RALPH_CONTAINER" bash
+    docker exec -it -u ralph "$RALPH_CONTAINER" bash
     exit $?
 fi
 
 set_tab_title
 trap restore_tab_title EXIT
-docker exec -it -w /var/www/html "$RALPH_CONTAINER" "$RALPH_SCRIPT" "$@"
+docker exec -it -u ralph -w /var/www/html "$RALPH_CONTAINER" "$RALPH_SCRIPT" "$@"
