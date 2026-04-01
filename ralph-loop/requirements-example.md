@@ -1,3 +1,4 @@
+<!-- #ddev-generated -->
 # Custom API Integration Module
 
 ## Objective

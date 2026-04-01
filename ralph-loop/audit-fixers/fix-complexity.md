@@ -1,3 +1,4 @@
+<!-- #ddev-generated -->
 # Fix All Code Complexity Issues via Audit Module
 
 ## Objective

@@ -1,3 +1,4 @@
+<!-- #ddev-generated -->
 # Fix All PHPCS Coding Standards Violations via Audit Module
 
 ## Objective

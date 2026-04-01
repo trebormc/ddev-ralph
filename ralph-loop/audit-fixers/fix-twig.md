@@ -1,3 +1,4 @@
+<!-- #ddev-generated -->
 # Fix All Twig Template Issues via Audit Module
 
 ## Objective

@@ -1,3 +1,4 @@
+<!-- #ddev-generated -->
 # Fix All PHPStan Errors via Audit Module
 
 ## Objective
