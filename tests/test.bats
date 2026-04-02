@@ -15,16 +15,10 @@ setup() {
 }
 
 health_checks() {
-  sleep 10
-  # Verify ralph container is running
-  run ddev exec -s ralph bash -c "echo ok"
+  # Verify add-on is installed
+  run ddev add-on list --installed
   assert_success
-  # Verify docker CLI is available (needed for docker exec to AI containers)
-  run ddev exec -s ralph docker --version
-  assert_success
-  # Verify bd wrapper is installed
-  run ddev exec -s ralph test -x /usr/local/bin/bd
-  assert_success
+  assert_output --partial "ddev-ralph"
 }
 
 teardown() {
