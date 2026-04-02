@@ -197,6 +197,13 @@ Ralph only contains bash, jq, and docker CLI. All AI execution happens in the de
 | `1` | Error (missing backend, invalid arguments, runtime failure) |
 | `2` | Maximum iterations reached before completion |
 
+## Uninstallation
+
+```bash
+ddev add-on remove ddev-ralph
+ddev restart
+```
+
 ## Part of DDEV AI Workspace
 
 This add-on is part of [DDEV AI Workspace](https://github.com/trebormc/ddev-ai-workspace), a modular ecosystem of DDEV add-ons for AI-powered Drupal development.
