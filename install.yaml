@@ -17,11 +17,17 @@ project_files:
   - ralph-build/entrypoint.sh
   - ralph-loop/ralph.sh
   - ralph-loop/requirements-example.md
-  - ralph-loop/audit-fixers/fix-phpunit.md
   - ralph-loop/audit-fixers/fix-phpcs.md
   - ralph-loop/audit-fixers/fix-phpstan.md
   - ralph-loop/audit-fixers/fix-complexity.md
   - ralph-loop/audit-fixers/fix-twig.md
+  - ralph-loop/audit-fixers/generate-behat-tests.md
+  - ralph-loop/audit-fixers/generate-functionaljs-tests.md
+  - ralph-loop/audit-fixers/generate-functional-tests.md
+  - ralph-loop/audit-fixers/generate-kernel-tests.md
+  - ralph-loop/audit-fixers/generate-playwright-tests.md
+  - ralph-loop/audit-fixers/generate-tests.md
+  - ralph-loop/audit-fixers/generate-unit-tests.md
   - commands/host/ralph
 
 global_files: []
