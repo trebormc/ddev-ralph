@@ -2,7 +2,7 @@
 
 # ddev-ralph
 
-A DDEV add-on that provides **Ralph Loop**, an autonomous AI task orchestrator for **Drupal** development. Ralph delegates work to [OpenCode](https://opencode.ai) or [Claude Code](https://docs.anthropic.com/en/docs/claude-code) containers via `docker exec`, running AI agents in a loop with [Beads](https://github.com/steveyegge/beads) task tracking -- perfect for overnight unattended execution.
+A DDEV add-on that provides **Ralph Loop**, an autonomous AI task orchestrator for **Drupal** development. Ralph delegates work to [OpenCode](https://opencode.ai) or [Claude Code](https://docs.anthropic.com/en/docs/claude-code) containers via `docker exec`, running AI agents in a loop with [Beads](https://github.com/steveyegge/beads) task tracking. Perfect for overnight unattended execution.
 
 > **Part of [DDEV AI Workspace](https://github.com/trebormc/ddev-ai-workspace)** — a modular ecosystem of DDEV add-ons for AI-powered Drupal development. Install the full stack with one command: `ddev add-on get trebormc/ddev-ai-workspace`
 >
@@ -233,7 +233,7 @@ All test generation prompts reference the specialized skills from [drupal-ai-age
 └──────────────────────────────────────────────────────────┘
 ```
 
-Ralph only contains bash, jq, and docker CLI. All AI execution happens in the dedicated OpenCode or Claude Code containers, and task tracking runs in the Beads container -- all via `docker exec`. This keeps each component independently maintainable.
+Ralph only contains bash, jq, and docker CLI. All AI execution happens in the dedicated OpenCode or Claude Code containers, and task tracking runs in the Beads container (all via `docker exec`). This keeps each component independently maintainable.
 
 ## Exit Codes
 
@@ -266,7 +266,7 @@ This add-on is part of [DDEV AI Workspace](https://github.com/trebormc/ddev-ai-w
 
 ## Disclaimer
 
-This project is an independent initiative by [Robert Menetray](https://menetray.com), sponsored by [DruScan](https://druscan.com). It is not affiliated with Anthropic, OpenCode, Beads, Playwright, Microsoft, or DDEV. AI-generated code may contain errors -- always review changes before deploying to production.
+This project is an independent initiative by [Robert Menetray](https://menetray.com), sponsored by [DruScan](https://druscan.com). It is not affiliated with Anthropic, OpenCode, Beads, Playwright, Microsoft, or DDEV. AI-generated code may contain errors. Always review changes before deploying to production.
 
 ## License
 
