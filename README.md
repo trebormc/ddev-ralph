@@ -1,4 +1,7 @@
-[![tests](https://github.com/trebormc/ddev-ralph/actions/workflows/tests.yml/badge.svg)](https://github.com/trebormc/ddev-ralph/actions/workflows/tests.yml)
+[![add-on registry](https://img.shields.io/badge/DDEV-Add--on_Registry-blue)](https://addons.ddev.com)
+[![tests](https://github.com/trebormc/ddev-ralph/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/trebormc/ddev-ralph/actions/workflows/tests.yml?query=branch%3Amain)
+[![last commit](https://img.shields.io/github/last-commit/trebormc/ddev-ralph)](https://github.com/trebormc/ddev-ralph/commits)
+[![release](https://img.shields.io/github/v/release/trebormc/ddev-ralph)](https://github.com/trebormc/ddev-ralph/releases/latest)
 
 # ddev-ralph
 
