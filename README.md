@@ -14,17 +14,32 @@ A DDEV add-on that provides **Ralph Loop**, an autonomous AI task orchestrator f
 
 ## Quick Start
 
+The **recommended way** to install Ralph is through the [DDEV AI Workspace](https://github.com/trebormc/ddev-ai-workspace), which installs all tools (Ralph, OpenCode, Claude Code, and all dependencies) with a single command:
+
+```bash
+ddev add-on get trebormc/ddev-ai-workspace
+ddev restart
+ddev ralph --backend opencode
+```
+
+### Standalone installation
+
+If you prefer to install Ralph individually, you need at least one AI backend installed first. This requires familiarity with the DDEV add-on ecosystem and its dependencies:
+
 ```bash
 # 1. Install a backend (pick one or both)
 ddev add-on get trebormc/ddev-opencode
 # or
 ddev add-on get trebormc/ddev-claude-code
 
-# 2. Install Ralph
+# 2. Install Ralph (auto-installs ddev-playwright-mcp and ddev-beads)
 ddev add-on get trebormc/ddev-ralph
 ddev restart
+```
 
-# 3. Create a requirements file
+### Example: run Ralph with a requirements file
+
+```bash
 cat > requirements.md << 'EOF'
 # My Feature
 
@@ -41,18 +56,8 @@ Create a custom Drupal module that does X.
 - PHPCS no errors
 EOF
 
-# 4. Run Ralph
 ddev ralph --backend opencode
 ```
-
-## Installation
-
-```bash
-ddev add-on get trebormc/ddev-ralph
-ddev restart
-```
-
-This automatically installs [ddev-playwright-mcp](https://github.com/trebormc/ddev-playwright-mcp) (browser automation) and [ddev-beads](https://github.com/trebormc/ddev-beads) (task tracking) as dependencies.
 
 ## Usage
 
