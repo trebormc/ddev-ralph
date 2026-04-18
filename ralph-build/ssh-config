@@ -1,3 +1,4 @@
+#ddev-generated
 # SSH client configuration for Ralph orchestrator
 # Connects to AI backends (opencode, claude-code) and beads (bd task tracking)
 
