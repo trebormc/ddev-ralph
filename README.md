@@ -78,7 +78,7 @@ ddev ralph --backend opencode --prompt my-tasks.md
 ddev ralph --backend claude --no-replan
 
 # Override model
-ddev ralph --backend opencode -m anthropic/claude-sonnet-4-5
+ddev ralph --backend opencode -m anthropic/claude-sonnet-4-6
 
 # Maximum speed overnight run
 ddev ralph --backend claude -i 500 -d 0
