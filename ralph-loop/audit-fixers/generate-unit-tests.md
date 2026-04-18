@@ -189,13 +189,13 @@ protected function setUp(): void {
 
 ```bash
 # Full unit test audit (detect missing tests and failures)
-ssh web ./vendor/bin/drush audit:run phpunit --format=json
+ssh web drush audit:run phpunit --format=json
 
 # Filtered by specific module
-ssh web ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
 
 # See which modules have test issues
-ssh web ./vendor/bin/drush audit:filters phpunit --format=json
+ssh web drush audit:filters phpunit --format=json
 
 # Run PHPUnit directly for a specific module
 ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
@@ -231,16 +231,16 @@ ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/module
 
 ```bash
 # Primary: Audit module PHPUnit check
-ssh web ./vendor/bin/drush audit:run phpunit --format=json
+ssh web drush audit:run phpunit --format=json
 
 # Run all unit tests for a module
 ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
 
 # Verify new test files pass coding standards
-ssh web ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
 
 # Verify no PHPStan errors introduced
-ssh web ./vendor/bin/drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
 ```
 
 ## Success Criteria

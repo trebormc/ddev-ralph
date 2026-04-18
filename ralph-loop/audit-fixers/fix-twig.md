@@ -60,23 +60,23 @@ Automatically fix all Twig template quality issues reported by `drush audit:run 
 - Use `$DDEV_DOCROOT` for paths
 - Templates must work with Drupal's render system and cache
 - Any logic moved to preprocess must go in the `.theme` file
-- Clear cache after every template change: `ssh web ./vendor/bin/drush cr`
+- Clear cache after every template change: `ssh web drush cr`
 - Preprocess functions must include proper cache metadata
 
 ## Audit Commands
 
 ```bash
 # Full Twig scan
-ssh web ./vendor/bin/drush audit:run twig --format=json
+ssh web drush audit:run twig --format=json
 
 # Filtered by specific module/theme
-ssh web ./vendor/bin/drush audit:run twig --filter="module:THEME_NAME" --format=json
+ssh web drush audit:run twig --filter="module:THEME_NAME" --format=json
 
 # Only security issues
-ssh web ./vendor/bin/drush audit:run twig --filter="severity:error,category:security" --format=json
+ssh web drush audit:run twig --filter="severity:error,category:security" --format=json
 
 # See which modules/themes have issues
-ssh web ./vendor/bin/drush audit:filters twig --format=json
+ssh web drush audit:filters twig --format=json
 ```
 
 ## Development Approach
@@ -90,7 +90,7 @@ ssh web ./vendor/bin/drush audit:filters twig --format=json
    - For render array drilling -> render the full field
    - For `|raw` abuse -> remove or justify
    - For business logic -> move to preprocess, pass as variable
-5. Clear cache: `ssh web ./vendor/bin/drush cr`
+5. Clear cache: `ssh web drush cr`
 6. Re-run the audit filtered by that module/theme
 7. Continue to next template
 
@@ -138,17 +138,17 @@ function mytheme_preprocess_node(array &$variables): void {
 
 ```bash
 # Primary: Audit module Twig check
-ssh web ./vendor/bin/drush audit:run twig --format=json
+ssh web drush audit:run twig --format=json
 # Check summary.errors = 0 AND summary.warnings = 0
 
 # Clear cache (REQUIRED after every template change)
-ssh web ./vendor/bin/drush cr
+ssh web drush cr
 
 # Verify no regressions in other audits
-ssh web ./vendor/bin/drush audit:run phpcs --format=json
+ssh web drush audit:run phpcs --format=json
 
 # If preprocess functions were modified, check PHPStan
-ssh web ./vendor/bin/drush audit:run phpstan --format=json
+ssh web drush audit:run phpstan --format=json
 ```
 
 ## Success Criteria
@@ -162,7 +162,7 @@ The task is complete when:
 5. All user-facing strings use `|t` filter
 6. `drush audit:run phpcs --format=json` still passes (if preprocess was modified)
 7. `drush audit:run phpstan --format=json` still passes (if preprocess was modified)
-8. `ssh web ./vendor/bin/drush cr` runs without errors
+8. `ssh web drush cr` runs without errors
 
 ## If Blocked
 

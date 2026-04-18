@@ -140,10 +140,10 @@ class ClassUnderTestTest extends KernelTestBase {
 
 ```bash
 # Full test audit
-ssh web ./vendor/bin/drush audit:run phpunit --format=json
+ssh web drush audit:run phpunit --format=json
 
 # Filtered by module
-ssh web ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
 
 # Run Kernel tests for a module
 ssh web ./vendor/bin/phpunit -c core --testsuite kernel $DDEV_DOCROOT/modules/custom/MODULE/

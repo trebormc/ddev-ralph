@@ -149,7 +149,7 @@ $node = $this->drupalCreateNode(['type' => 'article']);
 
 ```bash
 # Test audit
-ssh web ./vendor/bin/drush audit:run phpunit --format=json
+ssh web drush audit:run phpunit --format=json
 
 # Run Functional tests for a module
 ssh web ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/modules/custom/MODULE/

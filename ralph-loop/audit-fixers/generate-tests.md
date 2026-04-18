@@ -35,8 +35,8 @@ Before creating any tasks, gather this information:
 
 3. **Get test coverage audit** (if Audit module is available):
    ```bash
-   ssh web ./vendor/bin/drush audit:run phpunit --format=json
-   ssh web ./vendor/bin/drush audit:filters phpunit --format=json
+   ssh web drush audit:run phpunit --format=json
+   ssh web drush audit:filters phpunit --format=json
    ```
    If Audit module is not installed, fall back to manual scanning:
    ```bash
@@ -167,7 +167,7 @@ ssh web ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/module
 ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/
 
 # Full audit (if available)
-ssh web ./vendor/bin/drush audit:run phpunit --format=json
+ssh web drush audit:run phpunit --format=json
 
 # Behat (if applicable)
 ssh web ./vendor/bin/behat --config=behat.yml

@@ -61,13 +61,13 @@ Automatically fix all code complexity issues (high cyclomatic complexity, long m
 
 ```bash
 # Full complexity scan
-ssh web ./vendor/bin/drush audit:run complexity --format=json
+ssh web drush audit:run complexity --format=json
 
 # Filtered by specific module
-ssh web ./vendor/bin/drush audit:run complexity --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run complexity --filter="module:MODULE_NAME" --format=json
 
 # See which modules have issues
-ssh web ./vendor/bin/drush audit:filters complexity --format=json
+ssh web drush audit:filters complexity --format=json
 ```
 
 ## Development Approach
@@ -137,18 +137,18 @@ private function processItem(array $item): ?array {
 
 ```bash
 # Primary: Audit module complexity check
-ssh web ./vendor/bin/drush audit:run complexity --format=json
+ssh web drush audit:run complexity --format=json
 # Check summary.errors = 0 AND summary.warnings = 0
 
 # Verify no regressions in other audits
-ssh web ./vendor/bin/drush audit:run phpstan --format=json
-ssh web ./vendor/bin/drush audit:run phpcs --format=json
+ssh web drush audit:run phpstan --format=json
+ssh web drush audit:run phpcs --format=json
 
 # Run tests to verify behavior unchanged
 ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom
 
 # Clear cache
-ssh web ./vendor/bin/drush cr
+ssh web drush cr
 ```
 
 ## Success Criteria

@@ -56,16 +56,16 @@ ssh web ./vendor/bin/phpcbf \
   $DDEV_DOCROOT/modules/custom $DDEV_DOCROOT/themes/custom
 
 # Full scan via Audit module
-ssh web ./vendor/bin/drush audit:run phpcs --format=json
+ssh web drush audit:run phpcs --format=json
 
 # Filtered by specific module
-ssh web ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
 
 # Only errors (skip warnings for first pass)
-ssh web ./vendor/bin/drush audit:run phpcs --filter="severity:error" --format=json
+ssh web drush audit:run phpcs --filter="severity:error" --format=json
 
 # See which modules have issues
-ssh web ./vendor/bin/drush audit:filters phpcs --format=json
+ssh web drush audit:filters phpcs --format=json
 ```
 
 ## Development Approach
@@ -103,7 +103,7 @@ ssh web ./vendor/bin/drush audit:filters phpcs --format=json
 
 ```bash
 # Primary: Audit module
-ssh web ./vendor/bin/drush audit:run phpcs --format=json
+ssh web drush audit:run phpcs --format=json
 # Check summary.errors = 0 AND summary.warnings = 0
 
 # Secondary: Direct PHPCS
@@ -113,7 +113,7 @@ ssh web ./vendor/bin/phpcs \
   $DDEV_DOCROOT/modules/custom $DDEV_DOCROOT/themes/custom
 
 # After all fixes: verify PHPStan still passes
-ssh web ./vendor/bin/drush audit:run phpstan --format=json
+ssh web drush audit:run phpstan --format=json
 ```
 
 ## Success Criteria
@@ -124,7 +124,7 @@ The task is complete when:
 2. `drush audit:run phpcs --format=json` returns `summary.warnings: 0`
 3. No `phpcs:ignore` annotations were added (or each is documented with reason)
 4. `drush audit:run phpstan --format=json` still passes (fixes didn't break types)
-5. `ssh web ./vendor/bin/drush cr` runs without errors
+5. `ssh web drush cr` runs without errors
 
 ## If Blocked
 

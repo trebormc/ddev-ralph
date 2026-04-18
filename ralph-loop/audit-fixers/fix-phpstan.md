@@ -45,13 +45,13 @@ Automatically fix all PHPStan static analysis errors reported by `drush audit:ru
 
 ```bash
 # Full scan (all custom modules and themes)
-ssh web ./vendor/bin/drush audit:run phpstan --format=json
+ssh web drush audit:run phpstan --format=json
 
 # Filtered by specific module (use after identifying which modules have issues)
-ssh web ./vendor/bin/drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
+ssh web drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
 
 # See which modules have issues
-ssh web ./vendor/bin/drush audit:filters phpstan --format=json
+ssh web drush audit:filters phpstan --format=json
 ```
 
 ## Development Approach
@@ -79,14 +79,14 @@ ssh web ./vendor/bin/drush audit:filters phpstan --format=json
 
 ```bash
 # Primary: Audit module
-ssh web ./vendor/bin/drush audit:run phpstan --format=json
+ssh web drush audit:run phpstan --format=json
 # Check summary.errors = 0
 
 # Secondary: Direct PHPStan (confirms audit results)
 ssh web ./vendor/bin/phpstan analyse $DDEV_DOCROOT/modules/custom --level=8
 
 # After all fixes: run PHPCS to ensure fixes didn't break coding standards
-ssh web ./vendor/bin/drush audit:run phpcs --format=json
+ssh web drush audit:run phpcs --format=json
 ```
 
 ## Success Criteria
@@ -97,7 +97,7 @@ The task is complete when:
 2. `drush audit:run phpstan --format=json` returns `summary.warnings: 0` (or only non-actionable warnings)
 3. No `@phpstan-ignore` annotations were added (or each is documented with reason)
 4. `drush audit:run phpcs --format=json` still returns `summary.errors: 0` (fixes didn't break standards)
-5. `ssh web ./vendor/bin/drush cr` runs without errors
+5. `ssh web drush cr` runs without errors
 
 ## If Blocked
 
