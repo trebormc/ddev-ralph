@@ -49,7 +49,7 @@ Automatically fix all code complexity issues (high cyclomatic complexity, long m
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - `declare(strict_types=1)` on all PHP files
 - Maintain dependency injection patterns
@@ -61,13 +61,13 @@ Automatically fix all code complexity issues (high cyclomatic complexity, long m
 
 ```bash
 # Full complexity scan
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run complexity --format=json
+ssh web ./vendor/bin/drush audit:run complexity --format=json
 
 # Filtered by specific module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run complexity --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run complexity --filter="module:MODULE_NAME" --format=json
 
 # See which modules have issues
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:filters complexity --format=json
+ssh web ./vendor/bin/drush audit:filters complexity --format=json
 ```
 
 ## Development Approach
@@ -137,18 +137,18 @@ private function processItem(array $item): ?array {
 
 ```bash
 # Primary: Audit module complexity check
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run complexity --format=json
+ssh web ./vendor/bin/drush audit:run complexity --format=json
 # Check summary.errors = 0 AND summary.warnings = 0
 
 # Verify no regressions in other audits
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpstan --format=json
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --format=json
+ssh web ./vendor/bin/drush audit:run phpstan --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --format=json
 
 # Run tests to verify behavior unchanged
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom
+ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom
 
 # Clear cache
-docker exec $WEB_CONTAINER ./vendor/bin/drush cr
+ssh web ./vendor/bin/drush cr
 ```
 
 ## Success Criteria

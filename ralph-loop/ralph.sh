@@ -7,15 +7,15 @@
 #
 # Orchestrates AI agents autonomously with Beads (bd) task tracking.
 # Delegates execution to separate OpenCode or Claude Code containers
-# via docker exec — Ralph itself has NO AI tools installed.
+# via SSH — Ralph itself has NO AI tools installed.
 #
 #   PHASE 1 (Planning):   Agent reads requirements -> creates tasks in bd
 #   PHASE 2+ (Execution): Agent works on tasks -> closes them -> repeats
 #   EXIT:                 When bd ready returns empty [] -> COMPLETE
 #
 # AUTONOMOUS MODE:
-#   OpenCode: docker exec $OPENCODE_CONTAINER opencode run ...
-#   Claude:   docker exec $CLAUDE_CONTAINER claude -p ...
+#   OpenCode: ssh opencode opencode run ...
+#   Claude:   ssh claude-code claude -p ...
 #
 # Usage: ./ralph.sh [options]
 #
@@ -29,9 +29,9 @@
 #   --no-beads               Run without Beads (legacy mode)
 #   -h, --help               Show this help
 #
-# Backends (via docker exec to separate containers):
-#   opencode  - Executes in ddev-{sitename}-opencode container
-#   claude    - Executes in ddev-{sitename}-claude-code container
+# Backends (via SSH to separate containers):
+#   opencode  - Executes in opencode container via SSH
+#   claude    - Executes in claude-code container via SSH
 #
 # Examples:
 #   ./ralph.sh --backend opencode                  # OpenCode backend (default)
@@ -77,8 +77,8 @@ show_help() {
   cat << 'EOF'
 Ralph Loop - Autonomous AI Task Orchestrator with Beads Integration
 
-Delegates to separate OpenCode or Claude Code containers via docker exec.
-Ralph itself is a lightweight orchestrator (bash + jq + beads + docker CLI).
+Delegates to separate OpenCode or Claude Code containers via SSH.
+Ralph itself is a lightweight orchestrator (bash + jq + beads).
 
 WORKFLOW:
   1. User writes requirements.md with project specifications
@@ -86,9 +86,9 @@ WORKFLOW:
   3. Ralph runs Phase 2+ (Execution): Agent works through tasks
   4. Loop exits when all tasks are completed (bd ready = [])
 
-BACKENDS (separate DDEV containers):
-  opencode  docker exec into ddev-{sitename}-opencode (requires ddev-opencode)
-  claude    docker exec into ddev-{sitename}-claude-code (requires ddev-claude-code)
+BACKENDS (separate DDEV containers via SSH):
+  opencode  SSH into opencode container (requires ddev-opencode)
+  claude    SSH into claude-code container (requires ddev-claude-code)
 
   Both achieve fully autonomous execution without permission prompts.
   Designed for overnight runs on well-defined, trusted tasks.
@@ -247,19 +247,14 @@ run_ai_tool() {
 
   case "$BACKEND" in
     opencode)
-      # Execute in the OpenCode container via docker exec
-      output=$(echo "$prompt" | docker exec -i \
-        -e OPENCODE_PERMISSION='{"*":"allow"}' \
-        -w /var/www/html \
-        "$OPENCODE_CONTAINER" \
-        opencode run $model_flag 2>&1) || true
+      # Execute in the OpenCode container via SSH
+      output=$(echo "$prompt" | ssh opencode \
+        "OPENCODE_PERMISSION='{\"*\":\"allow\"}' opencode run $model_flag" 2>&1) || true
       ;;
     claude)
-      # Execute in the Claude Code container via docker exec
-      output=$(echo "$prompt" | docker exec -i \
-        -w /var/www/html \
-        "$CLAUDE_CONTAINER" \
-        claude -p $model_flag --dangerously-skip-permissions 2>&1) || true
+      # Execute in the Claude Code container via SSH
+      output=$(echo "$prompt" | ssh claude-code \
+        "claude -p $model_flag --dangerously-skip-permissions" 2>&1) || true
       ;;
   esac
 
@@ -313,18 +308,18 @@ clear_all_tasks() {
 # Validation
 # =============================================================================
 
-# Verify the target AI container is running
+# Verify the target AI container is reachable via SSH
 case "$BACKEND" in
   opencode)
-    if ! docker inspect "$OPENCODE_CONTAINER" &>/dev/null; then
-      echo -e "${RD}Error: OpenCode container ($OPENCODE_CONTAINER) is not running.${R}"
+    if ! ssh -o ConnectTimeout=5 opencode true &>/dev/null; then
+      echo -e "${RD}Error: OpenCode container is not reachable via SSH (host: opencode).${R}"
       echo -e "${Y}Install it first: ddev add-on get trebormc/ddev-opencode && ddev restart${R}"
       exit 1
     fi
     ;;
   claude)
-    if ! docker inspect "$CLAUDE_CONTAINER" &>/dev/null; then
-      echo -e "${RD}Error: Claude Code container ($CLAUDE_CONTAINER) is not running.${R}"
+    if ! ssh -o ConnectTimeout=5 claude-code true &>/dev/null; then
+      echo -e "${RD}Error: Claude Code container is not reachable via SSH (host: claude-code).${R}"
       echo -e "${Y}Install it first: ddev add-on get trebormc/ddev-claude-code && ddev restart${R}"
       exit 1
     fi

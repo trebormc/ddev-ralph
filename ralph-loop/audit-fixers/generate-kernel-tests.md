@@ -128,7 +128,7 @@ class ClassUnderTestTest extends KernelTestBase {
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - `declare(strict_types=1)` on all files
 - Drupal coding standards: 2-space indentation
@@ -140,19 +140,19 @@ class ClassUnderTestTest extends KernelTestBase {
 
 ```bash
 # Full test audit
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --format=json
 
 # Filtered by module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
 
 # Run Kernel tests for a module
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite kernel $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite kernel $DDEV_DOCROOT/modules/custom/MODULE/
 
 # Run specific test file
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Kernel/Service/MyServiceTest.php
+ssh web ./vendor/bin/phpunit -c core $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Kernel/Service/MyServiceTest.php
 
 # PHPCS on test files
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Kernel/
+ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Kernel/
 ```
 
 ## Useful Core Traits

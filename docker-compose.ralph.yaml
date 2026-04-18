@@ -1,6 +1,6 @@
 #ddev-generated
 # Ralph Loop — Autonomous AI task orchestrator for DDEV
-# Delegates to OpenCode or Claude Code containers via docker exec
+# Delegates to OpenCode or Claude Code containers via SSH
 # Install: ddev add-on get trebormc/ddev-ralph
 
 services:
@@ -23,7 +23,6 @@ services:
 
     volumes:
       - ../:/var/www/html
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ddev-global-cache:/mnt/ddev-global-cache
 
     environment:

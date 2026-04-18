@@ -40,7 +40,7 @@ Automatically fix all Drupal coding standards violations (PHPCS errors and warni
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - Drupal coding standard: 2-space indentation, no tabs
 - Standards: Drupal + DrupalPractice (both must pass)
@@ -50,22 +50,22 @@ Automatically fix all Drupal coding standards violations (PHPCS errors and warni
 
 ```bash
 # Auto-fix first (ALWAYS run this before manual fixing)
-docker exec $WEB_CONTAINER ./vendor/bin/phpcbf \
+ssh web ./vendor/bin/phpcbf \
   --standard=Drupal,DrupalPractice \
   --extensions=php,module,inc,install,test,profile,theme \
   $DDEV_DOCROOT/modules/custom $DDEV_DOCROOT/themes/custom
 
 # Full scan via Audit module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --format=json
 
 # Filtered by specific module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
 
 # Only errors (skip warnings for first pass)
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --filter="severity:error" --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --filter="severity:error" --format=json
 
 # See which modules have issues
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:filters phpcs --format=json
+ssh web ./vendor/bin/drush audit:filters phpcs --format=json
 ```
 
 ## Development Approach
@@ -103,17 +103,17 @@ docker exec $WEB_CONTAINER ./vendor/bin/drush audit:filters phpcs --format=json
 
 ```bash
 # Primary: Audit module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --format=json
 # Check summary.errors = 0 AND summary.warnings = 0
 
 # Secondary: Direct PHPCS
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs \
+ssh web ./vendor/bin/phpcs \
   --standard=Drupal,DrupalPractice \
   --extensions=php,module,inc,install,test,profile,theme \
   $DDEV_DOCROOT/modules/custom $DDEV_DOCROOT/themes/custom
 
 # After all fixes: verify PHPStan still passes
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpstan --format=json
+ssh web ./vendor/bin/drush audit:run phpstan --format=json
 ```
 
 ## Success Criteria
@@ -124,7 +124,7 @@ The task is complete when:
 2. `drush audit:run phpcs --format=json` returns `summary.warnings: 0`
 3. No `phpcs:ignore` annotations were added (or each is documented with reason)
 4. `drush audit:run phpstan --format=json` still passes (fixes didn't break types)
-5. `docker exec $WEB_CONTAINER ./vendor/bin/drush cr` runs without errors
+5. `ssh web ./vendor/bin/drush cr` runs without errors
 
 ## If Blocked
 

@@ -137,7 +137,7 @@ $node = $this->drupalCreateNode(['type' => 'article']);
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - `declare(strict_types=1)` on all files
 - `$defaultTheme = 'stark'` on every test class
@@ -149,16 +149,16 @@ $node = $this->drupalCreateNode(['type' => 'article']);
 
 ```bash
 # Test audit
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --format=json
 
 # Run Functional tests for a module
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/modules/custom/MODULE/
 
 # Run specific test
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --filter testFormSavesValues
+ssh web ./vendor/bin/phpunit -c core --filter testFormSavesValues
 
 # PHPCS on test files
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Functional/
+ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/Functional/
 ```
 
 ## Success Criteria

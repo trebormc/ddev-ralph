@@ -15,6 +15,7 @@ project_files:
   - docker-compose.ralph.yaml
   - ralph-build/Dockerfile.ralph
   - ralph-build/entrypoint.sh
+  - ralph-build/ssh-config
   - ralph-loop/ralph.sh
   - ralph-loop/requirements-example.md
   - ralph-loop/audit-fixers/fix-phpcs.md
@@ -39,7 +40,7 @@ post_install_actions:
     echo ""
     echo "Ralph Loop installed successfully!"
     echo ""
-    echo "IMPORTANT: Ralph delegates to AI containers via docker exec."
+    echo "IMPORTANT: Ralph delegates to AI containers via SSH."
     echo "You need at least one of these add-ons installed:"
     echo "  ddev add-on get trebormc/ddev-opencode      (for --backend opencode)"
     echo "  ddev add-on get trebormc/ddev-claude-code    (for --backend claude)"

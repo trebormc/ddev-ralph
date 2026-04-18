@@ -177,7 +177,7 @@ protected function setUp(): void {
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - `declare(strict_types=1)` on all PHP files
 - Drupal coding standards: 2-space indentation, Drupal + DrupalPractice sniffs
@@ -189,22 +189,22 @@ protected function setUp(): void {
 
 ```bash
 # Full unit test audit (detect missing tests and failures)
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --format=json
 
 # Filtered by specific module
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --filter="module:MODULE_NAME" --format=json
 
 # See which modules have test issues
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:filters phpunit --format=json
+ssh web ./vendor/bin/drush audit:filters phpunit --format=json
 
 # Run PHPUnit directly for a specific module
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
+ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
 
 # Run PHPUnit for a specific test file
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/Service/MyServiceTest.php
+ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/Service/MyServiceTest.php
 
 # PHPCS on test files
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
+ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
 ```
 
 ## Error Handling During Loop
@@ -231,16 +231,16 @@ docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $
 
 ```bash
 # Primary: Audit module PHPUnit check
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --format=json
 
 # Run all unit tests for a module
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
+ssh web ./vendor/bin/phpunit $DDEV_DOCROOT/modules/custom/MODULE_NAME/tests/src/Unit/
 
 # Verify new test files pass coding standards
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run phpcs --filter="module:MODULE_NAME" --format=json
 
 # Verify no PHPStan errors introduced
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
+ssh web ./vendor/bin/drush audit:run phpstan --filter="module:MODULE_NAME" --format=json
 ```
 
 ## Success Criteria

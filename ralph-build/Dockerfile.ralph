@@ -1,6 +1,6 @@
 #ddev-generated
 # Ralph Loop container — lightweight autonomous task orchestrator
-# Only bash, jq, and docker CLI. AI tools and Beads run in their own containers.
+# Only bash, jq, and SSH client. AI tools and Beads run in their own containers.
 
 FROM ubuntu:24.04
 
@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV USERNAME=${USERNAME}
 ENV USER_HOME=/home/${USERNAME}
 
-# Install only what Ralph needs: bash, jq, git, docker CLI
+# Install only what Ralph needs: bash, jq, git, SSH client
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
@@ -20,11 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     sudo \
     jq \
-    docker.io \
+    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install bd wrapper — delegates to Beads container via docker exec
-RUN printf '#!/bin/bash\nexec docker exec -i "$BEADS_CONTAINER" bd "$@"\n' > /usr/local/bin/bd \
+# Install bd wrapper — delegates to Beads container via SSH
+RUN printf '#!/bin/bash\nexec ssh beads bd "$@"\n' > /usr/local/bin/bd \
     && chmod +x /usr/local/bin/bd
 
 # Create user with matching UID/GID
@@ -41,6 +41,12 @@ RUN existing_user=$(getent passwd ${USER_UID} | cut -d: -f1) \
     && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
+# Set up SSH client config
+RUN mkdir -p ${USER_HOME}/.ssh && chmod 700 ${USER_HOME}/.ssh
+COPY ralph-build/ssh-config ${USER_HOME}/.ssh/config
+RUN chmod 600 ${USER_HOME}/.ssh/config \
+    && chown -R ${USER_UID}:${USER_GID} ${USER_HOME}/.ssh
+
 RUN mkdir -p /var/www/html \
     && chown -R ${USER_UID}:${USER_GID} ${USER_HOME} \
     && chown -R ${USER_UID}:${USER_GID} /var/www/html
@@ -51,7 +57,7 @@ WORKDIR ${USER_HOME}
 RUN echo 'alias ll="ls -la"' >> ~/.bashrc \
     && echo '' >> ~/.bashrc \
     && echo 'echo "Ralph container ready (orchestrator)"' >> ~/.bashrc \
-    && echo 'echo "  AI backends via docker exec: opencode | claude-code"' >> ~/.bashrc \
+    && echo 'echo "  AI backends via SSH: opencode | claude-code"' >> ~/.bashrc \
     && echo 'echo "  Usage: ralph.sh --backend opencode|claude [options]"' >> ~/.bashrc
 
 COPY ralph-build/entrypoint.sh /usr/local/bin/entrypoint.sh

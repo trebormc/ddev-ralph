@@ -121,19 +121,19 @@ Follow TDD for each component:
 
 ```bash
 # Clear cache
-docker exec $WEB_CONTAINER drush cr
+ssh web drush cr
 
 # Run tests
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit web/modules/custom/product_api
+ssh web ./vendor/bin/phpunit web/modules/custom/product_api
 
 # Code standards
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs web/modules/custom/product_api
+ssh web ./vendor/bin/phpcs web/modules/custom/product_api
 
 # Static analysis
-docker exec $WEB_CONTAINER ./vendor/bin/phpstan analyse web/modules/custom/product_api --level=8
+ssh web ./vendor/bin/phpstan analyse web/modules/custom/product_api --level=8
 
 # Test drush command
-docker exec $WEB_CONTAINER drush product-api:refresh
+ssh web drush product-api:refresh
 ```
 
 ## Success Criteria

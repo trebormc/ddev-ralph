@@ -1,0 +1,26 @@
+# SSH client configuration for Ralph orchestrator
+# Connects to AI backends (opencode, claude-code) and beads (bd task tracking)
+
+Host opencode
+    HostName opencode
+    User opencode
+    IdentityFile ~/.ssh/ddev_agent_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    RequestTTY no
+
+Host claude-code
+    HostName claude-code
+    User claude
+    IdentityFile ~/.ssh/ddev_agent_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    RequestTTY no
+
+Host beads
+    HostName beads
+    User beads
+    IdentityFile ~/.ssh/ddev_agent_key
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    RequestTTY no

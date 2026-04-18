@@ -15,28 +15,28 @@ Before creating any tasks, gather this information:
 
 1. **Detect Drupal version**:
    ```bash
-   docker exec $WEB_CONTAINER php -r "include '$DDEV_DOCROOT/core/lib/Drupal.php'; echo \Drupal::VERSION;"
+   ssh web php -r "include '$DDEV_DOCROOT/core/lib/Drupal.php'; echo \Drupal::VERSION;"
    ```
    This determines PHPUnit version, data provider syntax, and ChromeDriver config.
 
 2. **Check existing test infrastructure**:
    ```bash
    # PHPUnit config
-   docker exec $WEB_CONTAINER test -f phpunit.xml && echo "phpunit.xml exists" || echo "no phpunit.xml"
-   docker exec $WEB_CONTAINER test -f phpunit.xml.dist && echo "phpunit.xml.dist exists" || echo "no phpunit.xml.dist"
+   ssh web test -f phpunit.xml && echo "phpunit.xml exists" || echo "no phpunit.xml"
+   ssh web test -f phpunit.xml.dist && echo "phpunit.xml.dist exists" || echo "no phpunit.xml.dist"
 
    # Behat
-   docker exec $WEB_CONTAINER test -f behat.yml && echo "behat exists" || echo "no behat"
-   docker exec $WEB_CONTAINER test -f behat.yml.dist && echo "behat.dist exists" || echo "no behat.dist"
+   ssh web test -f behat.yml && echo "behat exists" || echo "no behat"
+   ssh web test -f behat.yml.dist && echo "behat.dist exists" || echo "no behat.dist"
 
    # Playwright
-   docker exec $WEB_CONTAINER test -f test/playwright/playwright.config.ts && echo "playwright exists" || echo "no playwright"
+   ssh web test -f test/playwright/playwright.config.ts && echo "playwright exists" || echo "no playwright"
    ```
 
 3. **Get test coverage audit** (if Audit module is available):
    ```bash
-   docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
-   docker exec $WEB_CONTAINER ./vendor/bin/drush audit:filters phpunit --format=json
+   ssh web ./vendor/bin/drush audit:run phpunit --format=json
+   ssh web ./vendor/bin/drush audit:filters phpunit --format=json
    ```
    If Audit module is not installed, fall back to manual scanning:
    ```bash
@@ -104,11 +104,11 @@ For each task created in Phase 1:
 5. **Generate test files** in the correct directory structure
 6. **Run the tests** to verify they pass:
    ```bash
-   docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --group MODULE_NAME
+   ssh web ./vendor/bin/phpunit -c core --group MODULE_NAME
    ```
 7. **Run PHPCS** on new test files:
    ```bash
-   docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice MODULE_PATH/tests/
+   ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice MODULE_PATH/tests/
    ```
 8. **Close the task** with a summary of what was generated
 
@@ -135,7 +135,7 @@ For each task created in Phase 1:
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths (never hardcode `web/`)
 - Drupal coding standards: 2-space indentation
 - All test types must pass both PHPCS and the tests themselves
@@ -156,21 +156,21 @@ The task is complete when:
 
 ```bash
 # Run all tests for a module
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --group MODULE_NAME
+ssh web ./vendor/bin/phpunit -c core --group MODULE_NAME
 
 # Run by suite
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite unit $DDEV_DOCROOT/modules/custom/MODULE/
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite kernel $DDEV_DOCROOT/modules/custom/MODULE/
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite unit $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite kernel $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite functional $DDEV_DOCROOT/modules/custom/MODULE/
 
 # PHPCS on test files
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/
+ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/
 
 # Full audit (if available)
-docker exec $WEB_CONTAINER ./vendor/bin/drush audit:run phpunit --format=json
+ssh web ./vendor/bin/drush audit:run phpunit --format=json
 
 # Behat (if applicable)
-docker exec $WEB_CONTAINER ./vendor/bin/behat --config=behat.yml
+ssh web ./vendor/bin/behat --config=behat.yml
 
 # Playwright (if applicable)
 npx playwright test

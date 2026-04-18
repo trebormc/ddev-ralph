@@ -30,19 +30,19 @@ Generate missing FunctionalJavascript tests (`WebDriverTestBase`) for custom mod
 
 ```bash
 # Find forms with AJAX callbacks
-docker exec $WEB_CONTAINER grep -rl "#ajax" $DDEV_DOCROOT/modules/custom/ --include="*.php"
+ssh web grep -rl "#ajax" $DDEV_DOCROOT/modules/custom/ --include="*.php"
 
 # Find #states usage
-docker exec $WEB_CONTAINER grep -rl "#states" $DDEV_DOCROOT/modules/custom/ --include="*.php"
+ssh web grep -rl "#states" $DDEV_DOCROOT/modules/custom/ --include="*.php"
 
 # Find entity reference autocomplete fields
-docker exec $WEB_CONTAINER grep -rl "entity_autocomplete\|autocomplete_route" $DDEV_DOCROOT/modules/custom/ --include="*.php" --include="*.yml"
+ssh web grep -rl "entity_autocomplete\|autocomplete_route" $DDEV_DOCROOT/modules/custom/ --include="*.php" --include="*.yml"
 
 # Find modal/dialog usage
-docker exec $WEB_CONTAINER grep -rl "dialog\|modal\|AjaxResponse" $DDEV_DOCROOT/modules/custom/ --include="*.php"
+ssh web grep -rl "dialog\|modal\|AjaxResponse" $DDEV_DOCROOT/modules/custom/ --include="*.php"
 
 # Find custom JS behaviors
-docker exec $WEB_CONTAINER grep -rl "Drupal.behaviors" $DDEV_DOCROOT/modules/custom/ --include="*.js"
+ssh web grep -rl "Drupal.behaviors" $DDEV_DOCROOT/modules/custom/ --include="*.js"
 ```
 
 ### What Needs FunctionalJavascript Tests
@@ -155,7 +155,7 @@ Drupal 10.3+ and 11 require `goog:chromeOptions`:
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Use `$DDEV_DOCROOT` for paths
 - `declare(strict_types=1)` on all files
 - `$defaultTheme = 'stark'` required
@@ -167,16 +167,16 @@ Drupal 10.3+ and 11 require `goog:chromeOptions`:
 
 ```bash
 # Verify ChromeDriver is available
-docker exec $WEB_CONTAINER chromedriver --version 2>/dev/null || echo "ChromeDriver not found"
+ssh web chromedriver --version 2>/dev/null || echo "ChromeDriver not found"
 
 # Run FunctionalJavascript tests
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --testsuite functional-javascript $DDEV_DOCROOT/modules/custom/MODULE/
+ssh web ./vendor/bin/phpunit -c core --testsuite functional-javascript $DDEV_DOCROOT/modules/custom/MODULE/
 
 # Run specific test
-docker exec $WEB_CONTAINER ./vendor/bin/phpunit -c core --filter testAjaxBehavior
+ssh web ./vendor/bin/phpunit -c core --filter testAjaxBehavior
 
 # PHPCS on test files
-docker exec $WEB_CONTAINER ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/FunctionalJavascript/
+ssh web ./vendor/bin/phpcs --standard=Drupal,DrupalPractice $DDEV_DOCROOT/modules/custom/MODULE/tests/src/FunctionalJavascript/
 ```
 
 ## Success Criteria

@@ -17,17 +17,17 @@ Before creating any tasks, verify Behat is installed:
 
 ```bash
 # Check for Behat config
-docker exec $WEB_CONTAINER test -f behat.yml && echo "behat.yml found" || echo "no behat.yml"
-docker exec $WEB_CONTAINER test -f behat.yml.dist && echo "behat.yml.dist found" || echo "no behat.yml.dist"
+ssh web test -f behat.yml && echo "behat.yml found" || echo "no behat.yml"
+ssh web test -f behat.yml.dist && echo "behat.yml.dist found" || echo "no behat.yml.dist"
 
 # Check Behat binary
-docker exec $WEB_CONTAINER test -f ./vendor/bin/behat && echo "behat installed" || echo "behat not installed"
+ssh web test -f ./vendor/bin/behat && echo "behat installed" || echo "behat not installed"
 
 # List existing features
 find . -name "*.feature" -path "*/behat/*" 2>/dev/null || find . -name "*.feature" -path "*/features/*" 2>/dev/null
 
 # List available step definitions
-docker exec $WEB_CONTAINER ./vendor/bin/behat --definitions 2>/dev/null | head -50
+ssh web ./vendor/bin/behat --definitions 2>/dev/null | head -50
 ```
 
 If Behat is NOT installed, **do not proceed**. Create a single Beads task: "Install Behat: `composer require --dev drupal/drupal-extension behat/mink-selenium2-driver`" and close it with a note.
@@ -180,7 +180,7 @@ public function iAmOnEditPageOfContent(string $type, string $title): void {
 
 ## Technical Constraints
 
-- All commands via `docker exec $WEB_CONTAINER`
+- All commands via `ssh web`
 - Behat config: `behat.yml` or `behat.yml.dist`
 - Drupal Extension `^5` for D10/D11
 - Feature files in English
@@ -192,27 +192,27 @@ public function iAmOnEditPageOfContent(string $type, string $title): void {
 
 ```bash
 # Verify syntax (dry run)
-docker exec $WEB_CONTAINER ./vendor/bin/behat --dry-run --config=behat.yml
+ssh web ./vendor/bin/behat --dry-run --config=behat.yml
 
 # Run all tests
-docker exec $WEB_CONTAINER ./vendor/bin/behat --config=behat.yml
+ssh web ./vendor/bin/behat --config=behat.yml
 
 # Run by tag
-docker exec $WEB_CONTAINER ./vendor/bin/behat --tags=@content
-docker exec $WEB_CONTAINER ./vendor/bin/behat --tags=@smoke
-docker exec $WEB_CONTAINER ./vendor/bin/behat --tags="@content&&~@javascript"
+ssh web ./vendor/bin/behat --tags=@content
+ssh web ./vendor/bin/behat --tags=@smoke
+ssh web ./vendor/bin/behat --tags="@content&&~@javascript"
 
 # Run specific feature
-docker exec $WEB_CONTAINER ./vendor/bin/behat features/content/article.feature
+ssh web ./vendor/bin/behat features/content/article.feature
 
 # Run specific scenario by line
-docker exec $WEB_CONTAINER ./vendor/bin/behat features/content/article.feature:15
+ssh web ./vendor/bin/behat features/content/article.feature:15
 
 # List all available steps
-docker exec $WEB_CONTAINER ./vendor/bin/behat --definitions
+ssh web ./vendor/bin/behat --definitions
 
 # Generate snippets for undefined steps
-docker exec $WEB_CONTAINER ./vendor/bin/behat --dry-run --append-snippets
+ssh web ./vendor/bin/behat --dry-run --append-snippets
 ```
 
 ## Success Criteria
