@@ -266,10 +266,10 @@ init_beads() {
     return 0
   fi
 
-  # Initialize Beads if not already initialized
+  # The beads container auto-initializes the database on start (with git-safe
+  # flags). Never run `bd init` here — it can touch the project's git state.
   if [[ ! -d ".beads" ]]; then
-    echo -e "${B}Initializing Beads task tracker...${R}"
-    bd init --quiet 2>/dev/null || true
+    echo -e "${B}Beads not initialized — run 'ddev restart' to initialize it${R}"
   fi
 }
 
