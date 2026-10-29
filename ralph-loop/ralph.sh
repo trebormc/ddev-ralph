@@ -247,9 +247,13 @@ run_ai_tool() {
 
   case "$BACKEND" in
     opencode)
-      # Execute in the OpenCode container via SSH
+      # Execute in the OpenCode container via SSH (OpenCode 2).
+      # --auto: approve every permission not explicitly denied by the config
+      #         (OpenCode 2 ignores the OPENCODE_PERMISSION env var).
+      # --standalone: private server per run instead of the shared background
+      #         service, so the run owns its environment and exits cleanly.
       output=$(echo "$prompt" | ssh opencode \
-        "OPENCODE_PERMISSION='{\"*\":\"allow\"}' opencode run $model_flag" 2>&1) || true
+        "opencode run --standalone --auto $model_flag" 2>&1) || true
       ;;
     claude)
       # Execute in the Claude Code container via SSH
