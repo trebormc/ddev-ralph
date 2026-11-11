@@ -337,8 +337,9 @@ refresh_pending_tasks() {
   return 1
 }
 
+# --all: bd list leaves closed issues out by default
 count_closed_tasks() {
-  bd list --json 2>/dev/null | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0"
+  bd list --all --json 2>/dev/null | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0"
 }
 
 clear_all_tasks() {
@@ -456,7 +457,7 @@ if [[ "$USE_BEADS" == "true" ]]; then
 
   if [[ "$PENDING_COUNT" -eq 0 ]]; then
     # Check if there's any task history (closed tasks)
-    ALL_TASKS=$(bd list --json 2>/dev/null || echo "[]")
+    ALL_TASKS=$(bd list --all --json 2>/dev/null || echo "[]")
     ALL_COUNT=$(echo "$ALL_TASKS" | jq 'length' 2>/dev/null || echo "0")
 
     if [[ "$ALL_COUNT" -eq 0 ]] || [[ "$REPLAN" == "true" ]]; then
@@ -486,7 +487,7 @@ while true; do
   if [[ "$iteration" -gt "$MAX_ITERATIONS" ]]; then
     # Update task count before exiting
     if [[ "$USE_BEADS" == "true" ]]; then
-      ALL_TASKS=$(bd list --json 2>/dev/null || echo "[]")
+      ALL_TASKS=$(bd list --all --json 2>/dev/null || echo "[]")
       TASKS_COMPLETED=$(echo "$ALL_TASKS" | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0")
     fi
     show_summary "MAX ITERATIONS REACHED" "$((iteration - 1))" "$Y" "$TASKS_COMPLETED"
