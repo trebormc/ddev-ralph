@@ -12,6 +12,8 @@
 #   PHASE 1 (Planning):   Agent reads requirements -> creates tasks in bd
 #   PHASE 2+ (Execution): Agent works on tasks -> closes them -> repeats
 #   EXIT:                 When bd ready returns empty [] -> COMPLETE
+#   ABORT:                3 consecutive Beads or backend failures, a plan
+#                         with no tasks, or tasks still open after 3 attempts
 #
 # AUTONOMOUS MODE:
 #   OpenCode: ssh opencode opencode run ...
@@ -38,7 +40,8 @@
 #   ./ralph.sh --backend claude                    # Claude Code backend
 #   ./ralph.sh --backend claude --prompt my-project.md
 #   ./ralph.sh --no-replan                         # Resume existing tasks
-#   ./ralph.sh -b claude -m anthropic/claude-opus-4-5
+#   ./ralph.sh -b claude -m opus                   # Claude Code: alias or full model name
+#   ./ralph.sh -b opencode -m anthropic/claude-opus-4-5   # OpenCode: provider/model
 #   ./ralph.sh --no-beads -p simple-task.md        # Legacy mode without Beads
 # =============================================================================
 
@@ -55,6 +58,11 @@ DELAY_SECONDS=1
 REPLAN=true
 USE_BEADS=true
 BACKEND="opencode"
+
+# Safety limits
+MAX_CONSECUTIVE_FAILURES=3   # Beads or backend failures in a row before aborting
+MAX_TASK_ATTEMPTS=3          # Iterations spent on one task before it is set aside
+MAX_PLANNING_ATTEMPTS=3      # Planning iterations that may end without any task
 
 # Colors
 R='\033[0m'
@@ -116,16 +124,18 @@ EXAMPLES:
   ./ralph.sh --backend claude                                # Claude Code backend (default model)
   ./ralph.sh -b claude --prompt my-project.md                # Custom requirements with Claude
   ./ralph.sh --no-replan                                     # Resume existing tasks
-  ./ralph.sh -b claude -m anthropic/claude-sonnet-4-6        # Override model
+  ./ralph.sh -b claude -m sonnet                             # Override model (Claude Code: alias or full model name)
+  ./ralph.sh -b opencode -m anthropic/claude-sonnet-4-6      # Override model (OpenCode: provider/model)
   ./ralph.sh --no-beads -p simple-task.md                    # Legacy mode (no tracking)
   ./ralph.sh -b claude -i 500 -d 0                           # Overnight Claude run
 
 EXIT CODES:
   0 - All tasks completed successfully
-  1 - Error encountered
+  1 - Error: agent signalled ERROR, Beads or the backend failed 3 times in a
+      row, planning created no tasks, or tasks stayed open after 3 attempts
   2 - Max iterations reached
 
-For more information, see: ralph-loop/README.md
+For more information, see: https://github.com/trebormc/ddev-ralph
 EOF
   exit 0
 }
@@ -236,10 +246,13 @@ check_beads_available() {
   return 0
 }
 
+# Prints the backend output and returns the backend's exit code, so the loop
+# can tell a dead backend (auth error, wrong model, SSH down) from a normal run.
 run_ai_tool() {
   local prompt="$1"
   local output=""
   local model_flag=""
+  local rc=0
 
   if [[ -n "$MODEL" ]]; then
     model_flag="--model $MODEL"
@@ -253,16 +266,30 @@ run_ai_tool() {
       # --standalone: private server per run instead of the shared background
       #         service, so the run owns its environment and exits cleanly.
       output=$(echo "$prompt" | ssh opencode \
-        "opencode run --standalone --auto $model_flag" 2>&1) || true
+        "opencode run --standalone --auto $model_flag" 2>&1) || rc=$?
       ;;
     claude)
-      # Execute in the Claude Code container via SSH
+      # Execute in the Claude Code container via SSH.
+      # Never add --bare: it skips the user-level settings (git-policy hook)
+      # and the orchestrator CLAUDE.md, agents and skills.
       output=$(echo "$prompt" | ssh claude-code \
-        "claude -p $model_flag --dangerously-skip-permissions" 2>&1) || true
+        "claude -p $model_flag --permission-mode bypassPermissions" 2>&1) || rc=$?
       ;;
   esac
 
   echo "$output"
+  return $rc
+}
+
+# True when the output carries the promise tag on a line of its own. A tag
+# merely mentioned inside a sentence is not a signal. ANSI colours, code-fence
+# backticks, emphasis marks and surrounding whitespace are ignored.
+# grep reads the whole input (no -q) so pipefail never sees a SIGPIPE.
+has_promise() {
+  printf '%s\n' "$1" \
+    | sed -e 's/\x1b\[[0-9;]*[A-Za-z]//g' -e 's/\r$//' \
+          -e 's/^[[:space:]`*]*//' -e 's/[[:space:]`*]*$//' \
+    | grep -xF "<promise>$2</promise>" >/dev/null
 }
 
 init_beads() {
@@ -277,17 +304,41 @@ init_beads() {
   fi
 }
 
-get_pending_tasks() {
+# Loads PENDING_TASKS / PENDING_COUNT from `bd ready`. A failing bd (SSH or
+# Beads down) is NOT "no tasks": it returns 1 so the caller retries, and aborts
+# the run after MAX_CONSECUTIVE_FAILURES failures in a row.
+# Usage: until refresh_pending_tasks; do sleep 2; done
+BD_FAILURES=0
+refresh_pending_tasks() {
   if [[ "$USE_BEADS" != "true" ]]; then
-    echo "[]"
-    return
+    PENDING_TASKS="[]"
+    PENDING_COUNT=0
+    return 0
   fi
-  bd ready --json 2>/dev/null || echo "[]"
+
+  local out
+  if out=$(bd ready --json 2>/dev/null); then
+    BD_FAILURES=0
+    # bd succeeded: anything that is not a JSON array means "nothing ready"
+    if ! echo "$out" | jq -e 'type == "array"' >/dev/null 2>&1; then
+      out="[]"
+    fi
+    PENDING_TASKS="$out"
+    PENDING_COUNT=$(echo "$out" | jq 'length')
+    return 0
+  fi
+
+  BD_FAILURES=$((BD_FAILURES + 1))
+  echo -e "${Y}Warning: 'bd ready' failed (${BD_FAILURES}/${MAX_CONSECUTIVE_FAILURES}) - is the beads container reachable?${R}"
+  if [[ "$BD_FAILURES" -ge "$MAX_CONSECUTIVE_FAILURES" ]]; then
+    show_summary "ERROR: BEADS UNREACHABLE" "${iteration:-0}" "$RD" "${TASKS_COMPLETED:-N/A}"
+    exit 1
+  fi
+  return 1
 }
 
-get_task_count() {
-  local tasks="$1"
-  echo "$tasks" | jq 'length' 2>/dev/null || echo "0"
+count_closed_tasks() {
+  bd list --json 2>/dev/null | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0"
 }
 
 clear_all_tasks() {
@@ -393,10 +444,15 @@ fi
 
 PHASE="execution"
 TASKS_COMPLETED=0
+iteration=0
+AI_FAILURES=0
+PLANNING_ATTEMPTS=0
+TASK_ID=""
+declare -A TASK_ATTEMPTS=()
+SKIPPED_IDS="[]"   # JSON array of task ids set aside after MAX_TASK_ATTEMPTS
 
 if [[ "$USE_BEADS" == "true" ]]; then
-  PENDING_TASKS=$(get_pending_tasks)
-  PENDING_COUNT=$(get_task_count "$PENDING_TASKS")
+  until refresh_pending_tasks; do sleep 2; done
 
   if [[ "$PENDING_COUNT" -eq 0 ]]; then
     # Check if there's any task history (closed tasks)
@@ -423,8 +479,6 @@ fi
 # Main Loop
 # =============================================================================
 
-iteration=0
-
 while true; do
   iteration=$((iteration + 1))
 
@@ -444,19 +498,39 @@ while true; do
   # ==========================================================================
 
   if [[ "$USE_BEADS" == "true" ]]; then
-    PENDING_TASKS=$(get_pending_tasks)
-    PENDING_COUNT=$(get_task_count "$PENDING_TASKS")
+    until refresh_pending_tasks; do sleep 2; done
 
-    # Check if all tasks are done (only after planning phase)
-    if [[ "$PHASE" == "execution" ]] && [[ "$PENDING_COUNT" -eq 0 ]]; then
-      # Get completed task count for summary
-      ALL_TASKS=$(bd list --json 2>/dev/null || echo "[]")
-      TASKS_COMPLETED=$(echo "$ALL_TASKS" | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0")
+    if [[ "$PHASE" == "execution" ]]; then
+      # Pick the first ready task that has not been set aside. A task that is
+      # still open after MAX_TASK_ATTEMPTS iterations is marked blocked and
+      # skipped, so one stuck task cannot burn the whole iteration budget.
+      while true; do
+        CURRENT_TASK=$(echo "$PENDING_TASKS" | jq -c --argjson skip "$SKIPPED_IDS" \
+          '[.[] | select(.id as $id | $skip | index($id) | not)] | .[0] // empty')
+        TASK_ID=$(echo "$CURRENT_TASK" | jq -r '.id // empty' 2>/dev/null || true)
+        [[ -z "$TASK_ID" ]] && break
+        if [[ "${TASK_ATTEMPTS[$TASK_ID]:-0}" -lt "$MAX_TASK_ATTEMPTS" ]]; then
+          break
+        fi
+        echo -e "${Y}Task $TASK_ID is still open after ${MAX_TASK_ATTEMPTS} attempts - marking it blocked and moving on.${R}"
+        bd update "$TASK_ID" --status blocked \
+          --notes "Ralph: not closed after ${MAX_TASK_ATTEMPTS} attempts, needs a human" >/dev/null 2>&1 || true
+        SKIPPED_IDS=$(echo "$SKIPPED_IDS" | jq -c --arg id "$TASK_ID" '. + [$id]')
+      done
 
-      # Exit when no pending tasks, regardless of completed count
-      # (TASKS_COMPLETED might be 0 if bd list fails or in fresh runs)
-      show_summary "ALL TASKS COMPLETED" "$iteration" "$GR" "$TASKS_COMPLETED"
-      exit 0
+      # No workable task left: done, or stopped on blocked tasks
+      if [[ -z "$TASK_ID" ]]; then
+        TASKS_COMPLETED=$(count_closed_tasks)
+        SKIPPED_COUNT=$(echo "$SKIPPED_IDS" | jq 'length')
+        if [[ "$SKIPPED_COUNT" -gt 0 ]]; then
+          echo -e "${RD}Tasks set aside after ${MAX_TASK_ATTEMPTS} attempts: $(echo "$SKIPPED_IDS" | jq -r 'join(", ")')${R}"
+          show_summary "STOPPED: $SKIPPED_COUNT TASK(S) BLOCKED" "$((iteration - 1))" "$RD" "$TASKS_COMPLETED"
+          exit 1
+        fi
+        show_summary "ALL TASKS COMPLETED" "$((iteration - 1))" "$GR" "$TASKS_COMPLETED"
+        exit 0
+      fi
+      TASK_ATTEMPTS[$TASK_ID]=$(( ${TASK_ATTEMPTS[$TASK_ID]:-0} + 1 ))
     fi
   fi
 
@@ -529,7 +603,8 @@ bd create \"Write API documentation\" -p 2 --json
 
 ## Completion Signal
 
-When you have created ALL necessary tasks, output exactly:
+When you have created ALL necessary tasks, output this tag on a line by itself
+(nothing else on that line; the loop ignores a tag written inside a sentence):
 \`\`\`
 <promise>PLANNING_COMPLETE</promise>
 \`\`\`
@@ -542,9 +617,7 @@ Do NOT start working on tasks yet. Only create the task list."
     # ========================================================================
 
     if [[ "$USE_BEADS" == "true" ]]; then
-      # Get highest priority task
-      CURRENT_TASK=$(echo "$PENDING_TASKS" | jq '.[0]' 2>/dev/null || echo "{}")
-      TASK_ID=$(echo "$CURRENT_TASK" | jq -r '.id // empty' 2>/dev/null || true)
+      # CURRENT_TASK / TASK_ID: highest priority workable task, selected above
       TASK_TITLE=$(echo "$CURRENT_TASK" | jq -r '.title // empty' 2>/dev/null || true)
       TASK_PRIORITY=$(echo "$CURRENT_TASK" | jq -r '.priority // empty' 2>/dev/null || true)
 
@@ -555,6 +628,7 @@ Do NOT start working on tasks yet. Only create the task list."
 **ID:** $TASK_ID
 **Title:** $TASK_TITLE
 **Priority:** P$TASK_PRIORITY
+**Attempt:** ${TASK_ATTEMPTS[$TASK_ID]} of $MAX_TASK_ATTEMPTS (after that the loop marks the task blocked and moves on)
 
 ## All Pending Tasks
 
@@ -597,7 +671,8 @@ $(cat "$PROMPT_FILE")
 ## Completion Signals
 
 - If you **completed a task** but there are **more pending**: Just close the task and end the iteration
-- If you **encounter an unrecoverable error**:
+- If you **encounter an unrecoverable error**, output this tag on a line by itself
+  (it stops the whole run; never write the tag for any other reason):
   \`\`\`
   <promise>ERROR</promise>
   \`\`\`
@@ -614,12 +689,13 @@ $(cat "$PROMPT_FILE")
 
 ## IMPORTANT: Completion Signal
 
-When you have COMPLETED ALL tasks described above, you MUST output exactly:
+When you have COMPLETED ALL tasks described above, you MUST output this tag on a
+line by itself (the loop ignores a tag written inside a sentence):
 \`\`\`
 <promise>COMPLETE</promise>
 \`\`\`
 
-If you encounter an unrecoverable error that prevents completion, output:
+If you encounter an unrecoverable error that prevents completion, output on a line by itself:
 \`\`\`
 <promise>ERROR</promise>
 \`\`\`
@@ -632,9 +708,27 @@ Do NOT continue working after outputting a completion signal."
   # Run AI Tool
   # ==========================================================================
 
-  OUTPUT=$(run_ai_tool "$PROMPT")
+  AI_RC=0
+  OUTPUT=$(run_ai_tool "$PROMPT") || AI_RC=$?
 
   echo "$OUTPUT"
+
+  # A backend that keeps failing (auth error, wrong model, SSH down) would
+  # otherwise spin through every iteration doing nothing.
+  if [[ "$AI_RC" -ne 0 ]]; then
+    AI_FAILURES=$((AI_FAILURES + 1))
+    echo ""
+    echo -e "${Y}Warning: $BACKEND backend exited with code $AI_RC (${AI_FAILURES}/${MAX_CONSECUTIVE_FAILURES} consecutive failures)${R}"
+    if [[ "$AI_FAILURES" -ge "$MAX_CONSECUTIVE_FAILURES" ]]; then
+      if [[ "$USE_BEADS" == "true" ]]; then
+        TASKS_COMPLETED=$(count_closed_tasks)
+      fi
+      show_summary "ERROR: BACKEND FAILED ${AI_FAILURES} TIMES IN A ROW" "$iteration" "$RD" "$TASKS_COMPLETED"
+      exit 1
+    fi
+  else
+    AI_FAILURES=0
+  fi
 
   ITER_TIME=$(($(date +%s) - ITER_START))
   echo ""
@@ -644,32 +738,54 @@ Do NOT continue working after outputting a completion signal."
   # Check signals and state
   # ==========================================================================
 
-  # Check for planning completion
-  if [[ "$PHASE" == "planning" ]]; then
-    if echo "$OUTPUT" | grep -q "<promise>PLANNING_COMPLETE</promise>"; then
-      echo ""
-      echo -e "${GR}Planning complete!${R} Switching to execution phase."
-      PHASE="execution"
+  # Check for planning completion. Planning ends on the promise tag OR as soon
+  # as tasks exist: re-running the planning prompt on top of an existing plan
+  # only creates duplicates. (Planning only happens in Beads mode.)
+  if [[ "$PHASE" == "planning" ]] && ! has_promise "$OUTPUT" "ERROR"; then
+    PLANNING_ATTEMPTS=$((PLANNING_ATTEMPTS + 1))
+    PLANNING_SIGNALLED=false
+    if has_promise "$OUTPUT" "PLANNING_COMPLETE"; then
+      PLANNING_SIGNALLED=true
+    fi
+    until refresh_pending_tasks; do sleep 2; done
 
-      # Show created tasks
-      if [[ "$USE_BEADS" == "true" ]]; then
-        PENDING_TASKS=$(get_pending_tasks)
-        PENDING_COUNT=$(get_task_count "$PENDING_TASKS")
-        echo -e "Created ${Y}$PENDING_COUNT${R} tasks:"
-        echo -e "${DIM}$(echo "$PENDING_TASKS" | jq -r '.[] | "  - [P\(.priority)] \(.title)"' 2>/dev/null || true)${R}"
+    if [[ "$PENDING_COUNT" -gt 0 ]]; then
+      echo ""
+      if [[ "$PLANNING_SIGNALLED" == "true" ]]; then
+        echo -e "${GR}Planning complete!${R} Switching to execution phase."
+      else
+        echo -e "${Y}No PLANNING_COMPLETE signal, but tasks exist.${R} Switching to execution phase instead of planning again."
       fi
+      PHASE="execution"
+      echo -e "Created ${Y}$PENDING_COUNT${R} tasks:"
+      echo -e "${DIM}$(echo "$PENDING_TASKS" | jq -r '.[] | "  - [P\(.priority)] \(.title)"' 2>/dev/null || true)${R}"
 
       echo ""
       echo -e "${Y}Starting execution in ${DELAY_SECONDS}s...${R}"
       sleep $DELAY_SECONDS
       continue
     fi
+
+    # No ready task: a plan that signals completion with nothing to do is an
+    # error, not a finished project.
+    if [[ "$PLANNING_SIGNALLED" == "true" ]]; then
+      echo ""
+      echo -e "${RD}Planning signalled completion but 'bd ready' is empty - no tasks were created.${R}"
+      show_summary "ERROR: PLANNING CREATED NO TASKS" "$iteration" "$RD" "0"
+      exit 1
+    fi
+    if [[ "$PLANNING_ATTEMPTS" -ge "$MAX_PLANNING_ATTEMPTS" ]]; then
+      echo ""
+      echo -e "${RD}Planning produced no tasks in ${PLANNING_ATTEMPTS} attempts.${R}"
+      show_summary "ERROR: PLANNING CREATED NO TASKS" "$iteration" "$RD" "0"
+      exit 1
+    fi
   fi
 
   # Check for error signal
-  if echo "$OUTPUT" | grep -q "<promise>ERROR</promise>"; then
+  if has_promise "$OUTPUT" "ERROR"; then
     if [[ "$USE_BEADS" == "true" ]]; then
-      TASKS_COMPLETED=$(bd list --json 2>/dev/null | jq '[.[] | select(.status == "closed")] | length' 2>/dev/null || echo "0")
+      TASKS_COMPLETED=$(count_closed_tasks)
     fi
     show_summary "ERROR" "$iteration" "$RD" "$TASKS_COMPLETED"
     exit 1
@@ -677,7 +793,7 @@ Do NOT continue working after outputting a completion signal."
 
   # Check for legacy COMPLETE signal (only in non-Beads mode)
   if [[ "$USE_BEADS" != "true" ]]; then
-    if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
+    if has_promise "$OUTPUT" "COMPLETE"; then
       show_summary "COMPLETED" "$iteration" "$GR"
       exit 0
     fi

@@ -25,6 +25,13 @@ if ! docker inspect "$RALPH_CONTAINER" &>/dev/null; then
     exit 1
 fi
 
+# Allocate a TTY only when stdin is one, so unattended runs (cron, nohup,
+# pipes) do not fail with "the input device is not a TTY"
+EXEC_TTY_FLAGS="-i"
+if [ -t 0 ]; then
+    EXEC_TTY_FLAGS="-it"
+fi
+
 # Special subcommand: shell
 if [ "$1" = "shell" ] || [ "$1" = "bash" ]; then
     set_tab_title
@@ -35,4 +42,4 @@ fi
 
 set_tab_title
 trap restore_tab_title EXIT
-docker exec -it -u ralph -w /var/www/html "$RALPH_CONTAINER" "$RALPH_SCRIPT" "$@"
+docker exec $EXEC_TTY_FLAGS -u ralph -w /var/www/html "$RALPH_CONTAINER" "$RALPH_SCRIPT" "$@"

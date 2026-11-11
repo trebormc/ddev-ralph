@@ -15,7 +15,7 @@ Before creating any tasks, gather this information:
 
 1. **Detect Drupal version**:
    ```bash
-   ssh web php -r "include '$DDEV_DOCROOT/core/lib/Drupal.php'; echo \Drupal::VERSION;"
+   ssh web drush status --field=drupal-version
    ```
    This determines PHPUnit version, data provider syntax, and ChromeDriver config.
 
